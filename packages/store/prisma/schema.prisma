@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String           @id @default(uuid())
+  email       String           @unique
+  name        String?
+  password    String
+  jobsApplied JobApplication[]
+  jobsPosted  JobPosting[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JobPosting {
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  company     String
+  location    String
+  type        JobType     @default(REMOTE)
+  category    JobCategory @default(FULL_TIME)
+  status      JobStatus   @default(OPEN)
+  salary      String?
+  postedBy    User        @relation(fields: [postedById], references: [id])
+  postedById  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id           String            @id @default(uuid())
+  jobPosting   JobPosting        @relation(fields: [jobPostingId], references: [id])
+  jobPostingId String
+  user         User              @relation(fields: [userId], references: [id])
+  userId       String
+  status       ApplicationStatus @default(APPLIED)
+  resume       String?
+  coverLetter  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ApplicationStatus {
+  APPLIED
+  INTERVIEWED
+  HIRED
+  REJECTED
+}
+
+enum JobType {
+  REMOTE
+  ONSITE
+  HYBRID
+}
+
+enum JobCategory {
+  INTERNSHIP
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  TEMPORARY
+  VOLUNTEER
+  OTHER
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+  PENDING
+  FILLED
+}
