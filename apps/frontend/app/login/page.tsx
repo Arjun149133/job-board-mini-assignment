@@ -18,6 +18,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { useAppContext } from "@/lib/context/AppContext";
 import jwt from "jsonwebtoken";
+import Loader from "@/components/Loader";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +27,7 @@ const Login = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loader, setLoader] = useState(false);
   const { setToken, setUserId } = useAppContext();
   const router = useRouter();
 
@@ -49,6 +51,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
+      setLoader(true);
       try {
         const res = await axios.post(`${API_BASE_URL}/auth/login`, {
           email: formData.email,
@@ -70,6 +73,7 @@ const Login = () => {
           "Failed to log in. Please check your credentials and try again."
         );
       }
+      setLoader(false);
     }
   };
 
@@ -145,7 +149,13 @@ const Login = () => {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              Sign In
+              {loader ? (
+                <div className="w-full flex items-center justify-center">
+                  <Loader />
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
 

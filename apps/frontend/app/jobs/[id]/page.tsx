@@ -28,13 +28,15 @@ import {
   Upload,
   ArrowLeft,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { API_BASE_URL } from "@/lib/config";
 import axios, { AxiosError } from "axios";
 import { JobSchema } from "@repo/types/types";
 import jwt from "jsonwebtoken";
 import { useAppContext } from "@/lib/context/AppContext";
+import { toast } from "sonner";
+import Loader from "@/components/Loader";
 // import { useToast } from "@/hooks/use-toast";
 
 const JobDetails = () => {
@@ -47,6 +49,8 @@ const JobDetails = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [jobNotFound, setJobNotFound] = useState(false);
   const { userId, token } = useAppContext();
+  const router = useRouter();
+  const [loader, setLoader] = useState(false);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -94,6 +98,7 @@ const JobDetails = () => {
 
   const handleSubmitApplication = async () => {
     if (validateApplication()) {
+      setLoader(true);
       try {
         const res = await axios.post(
           `${API_BASE_URL}/applications`,
@@ -111,17 +116,21 @@ const JobDetails = () => {
 
         console.log("Application submitted successfully:", res.data);
         if (res.status === 201) {
+          toast.success("Application submitted successfully!");
+          router.push(`/jobs/${id}`);
           setApplicationData({ coverLetter: "", resumeFile: "" });
           setErrors({});
         }
       } catch (error) {
         console.error("Error submitting application:", error);
+        toast.error("Failed to submit application");
         if (error instanceof AxiosError && error.response?.data.error) {
           setErrors({ resume: error.response.data.error });
         } else {
           setErrors({ resume: "Failed to submit application" });
         }
       }
+      setLoader(false);
     }
   };
 
@@ -281,9 +290,15 @@ const JobDetails = () => {
                         onClick={handleSubmitApplication}
                         className="w-full bg-blue-600 hover:bg-blue-700"
                       >
-                        {!token
-                          ? "Please login to apply"
-                          : "Submit Application"}
+                        {!token ? (
+                          "Please login to apply"
+                        ) : loader ? (
+                          <div className=" w-full flex items-center justify-center">
+                            <Loader />
+                          </div>
+                        ) : (
+                          "Submit Application"
+                        )}
                       </Button>
                     </div>
                   </DialogContent>

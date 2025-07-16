@@ -15,6 +15,7 @@ import Link from "next/link";
 import axios from "axios";
 import { API_BASE_URL } from "@/lib/config";
 import { toast } from "sonner";
+import Loader from "@/components/Loader";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +25,7 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
   });
+  const [loader, setLoader] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
@@ -53,6 +55,7 @@ const Signup = () => {
     e.preventDefault();
     if (validateForm()) {
       try {
+        setLoader(true);
         const res = await axios.post(`${API_BASE_URL}/auth/signup`, {
           name: formData.name,
           email: formData.email,
@@ -71,6 +74,8 @@ const Signup = () => {
           "Failed to create account. Please try again. check the logs."
         );
       }
+
+      setLoader(false);
     }
   };
 
@@ -182,7 +187,13 @@ const Signup = () => {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              Create Account
+              {loader ? (
+                <div className=" w-full flex items-center justify-center">
+                  <Loader />
+                </div>
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
 

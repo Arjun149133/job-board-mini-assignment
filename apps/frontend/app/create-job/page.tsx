@@ -19,6 +19,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { JobSchema } from "@repo/types/types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Loader from "@/components/Loader";
 
 const CreateJobPage = () => {
   const router = useRouter();
@@ -35,6 +36,7 @@ const CreateJobPage = () => {
     skills: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loader, setLoader] = useState(false);
 
   const validateForm = () => {
     const parsedData = JobSchema.safeParse(formData);
@@ -64,6 +66,7 @@ const CreateJobPage = () => {
     e.preventDefault();
 
     if (validateForm()) {
+      setLoader(true);
       try {
         const res = await axios.post(`${API_BASE_URL}/jobs`, formData, {
           headers: {
@@ -92,6 +95,7 @@ const CreateJobPage = () => {
         console.error("Error posting job:", error);
         toast.error("Failed to post job. Please try again.");
       }
+      setLoader(false);
     }
   };
 
@@ -316,13 +320,13 @@ const CreateJobPage = () => {
                     type="submit"
                     className="bg-blue-600 hover:bg-blue-700"
                   >
-                    Post Job
-                  </Button>
-                  <Button
-                    type="button"
-                    className="border border-white/50 text-white hover:bg-black/80"
-                  >
-                    Save as Draft
+                    {loader ? (
+                      <div className="w-full flex items-center justify-center">
+                        <Loader />
+                      </div>
+                    ) : (
+                      "Post Job"
+                    )}
                   </Button>
                 </div>
               </form>
