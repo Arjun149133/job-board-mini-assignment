@@ -19,6 +19,7 @@ import { toast } from "sonner";
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -61,7 +62,7 @@ const Signup = () => {
           toast.success("Account created successfully! Please log in.");
         }
 
-        setFormData({ email: "", password: "", confirmPassword: "" });
+        setFormData({ name: "", email: "", password: "", confirmPassword: "" });
         setErrors({});
       } catch (error) {
         console.log("Signup error:", error);
@@ -87,6 +88,24 @@ const Signup = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-white">
+                Name
+              </Label>
+              <Input
+                id="name"
+                type="name"
+                placeholder="Enter your name"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              />
+              {errors.name && (
+                <p className="text-red-400 text-sm">{errors.name}</p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white">
                 Email
