@@ -96,7 +96,7 @@ const Signup = () => {
                 id="name"
                 type="name"
                 placeholder="Enter your name"
-                value={formData.email}
+                value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
