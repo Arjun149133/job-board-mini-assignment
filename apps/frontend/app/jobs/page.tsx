@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,6 +19,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Clock, DollarSign, Building } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
+import { JobSchema } from "@repo/types/types";
 
 // Mock job data
 const mockJobs = [
@@ -73,15 +76,49 @@ const mockJobs = [
 const JobsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [jobType, setJobType] = useState("all");
+  const [jobCategory, setJobCategory] = useState("all");
+  const [jobs, setJobs] = useState<JobSchema[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<JobSchema[]>([]);
 
-  const filteredJobs = mockJobs.filter((job) => {
-    const matchesSearch =
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType =
-      jobType === "all" || job.type.toLowerCase() === jobType.toLowerCase();
-    return matchesSearch && matchesType;
-  });
+  const fetchJobs = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/jobs`, {
+        headers: {
+          Authorization: `${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (res.status === 200) {
+        setJobs(res.data);
+        setFilteredJobs(res.data);
+      } else {
+        console.error("Failed to fetch jobs");
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  useEffect(() => {
+    const filtered = jobs.filter((job) => {
+      const matchesSearch =
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.company.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType =
+        jobType === "all" || job.type.toLowerCase() === jobType.toLowerCase();
+      const matchesCategory =
+        jobCategory === "all" ||
+        job.category.toLowerCase() === jobCategory.toLowerCase();
+
+      return matchesSearch && matchesType && matchesCategory;
+    });
+
+    setFilteredJobs(filtered);
+  }, [searchTerm, jobType]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -115,9 +152,20 @@ const JobsPage = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-gray-700 border-gray-600">
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="full-time">Full-time</SelectItem>
-                  <SelectItem value="part-time">Part-time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
+                  <SelectItem value="remote">Remote</SelectItem>
+                  <SelectItem value="onsite">Onsite</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={jobCategory} onValueChange={setJobCategory}>
+                <SelectTrigger className="w-full md:w-48 bg-gray-700 border-gray-600 text-white">
+                  <SelectValue placeholder="Job Category" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-700 border-gray-600">
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="FULL_TIME">Full-time</SelectItem>
+                  <SelectItem value="PART_TIME">Part-time</SelectItem>
+                  <SelectItem value="INTERNSHIP">Internship</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -142,18 +190,32 @@ const JobsPage = () => {
                           {job.company}
                         </CardDescription>
                       </div>
-                      <Badge
-                        variant="secondary"
-                        className={`${
-                          job.type === "Full-time"
-                            ? "bg-green-600"
-                            : job.type === "Part-time"
-                              ? "bg-yellow-600"
-                              : "bg-blue-600"
-                        } text-white`}
-                      >
-                        {job.type}
-                      </Badge>
+                      <div className="gap-2 flex items-center justify-center">
+                        <Badge
+                          variant="secondary"
+                          className={`${
+                            job.type === "REMOTE"
+                              ? "bg-green-600"
+                              : job.type === "ONSITE"
+                                ? "bg-yellow-600"
+                                : "bg-blue-600"
+                          } text-white`}
+                        >
+                          {job.type}
+                        </Badge>
+                        <Badge
+                          variant="secondary"
+                          className={`${
+                            job.category === "FULL_TIME"
+                              ? "bg-green-600"
+                              : job.category === "INTERNSHIP"
+                                ? "bg-yellow-600"
+                                : "bg-blue-600"
+                          } text-white`}
+                        >
+                          {job.category}
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -168,14 +230,14 @@ const JobsPage = () => {
                       </div>
                       <div className="flex items-center">
                         <Clock className="h-4 w-4 mr-1" />
-                        {job.postedAt}
+                        {job.createdAt}
                       </div>
                     </div>
 
                     <p className="text-gray-300 mb-4">{job.description}</p>
 
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {job.skills.map((skill, index) => (
+                      {job.skills?.split(",").map((skill, index) => (
                         <Badge
                           key={index}
                           variant="outline"

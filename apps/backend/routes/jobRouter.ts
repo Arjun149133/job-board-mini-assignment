@@ -5,7 +5,7 @@ import { JobSchema } from "@repo/types/types";
 
 const router = Router();
 
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const jobs = await prisma.jobPosting.findMany();
 
@@ -40,6 +40,9 @@ router.post("/", authMiddleware, async (req, res) => {
                 category: job.category,
                 status: job.status,
                 salary: job.salary || null,
+                requirements: job.requirements || null,
+                responsibilities: job.responsibilities || null,
+                skills: job.skills || null,
                 postedById: req.userId!, 
             },
         });
@@ -53,8 +56,30 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 })
 
+//fetch jobs by the created user
+router.get("/user", authMiddleware, async (req, res) => {
+    try {
+        const jobs = await prisma.jobPosting.findMany({
+            where: {
+                postedById: req.userId!,
+            },
+            include: {
+                applications: true,
+            }
+        });
+
+        res.status(200).json(jobs);
+    } catch (error) {
+        res.status(500).json({
+            error: "Internal server error",
+        });
+        return;
+        
+    }
+})
+
 //fetch a specific job by ID
-router.get("/:id", authMiddleware, async (req, res) => {
+router.get("/:id", async (req, res) => {
     const jobId = req.params.id;
 
     try {

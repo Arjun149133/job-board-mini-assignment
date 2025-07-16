@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,83 +11,23 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  Eye,
-  Edit,
-  Trash2,
-  Users,
-  Briefcase,
-  FileText,
-  List,
-} from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Search, Eye, Edit, Trash2, List } from "lucide-react";
 import Link from "next/link";
-
-// Mock data
-const mockApplications = [
-  {
-    id: 1,
-    jobTitle: "Senior Frontend Developer",
-    applicantName: "John Doe",
-    applicantEmail: "john.doe@example.com",
-    status: "pending",
-    appliedAt: "2024-01-15",
-    coverLetter: "I am excited to apply for this position...",
-    resumeUrl: "#",
-  },
-  {
-    id: 2,
-    jobTitle: "Product Designer",
-    applicantName: "Jane Smith",
-    applicantEmail: "jane.smith@example.com",
-    status: "reviewed",
-    appliedAt: "2024-01-14",
-    coverLetter: "With 5 years of design experience...",
-    resumeUrl: "#",
-  },
-  {
-    id: 3,
-    jobTitle: "Backend Engineer",
-    applicantName: "Mike Johnson",
-    applicantEmail: "mike.johnson@example.com",
-    status: "rejected",
-    appliedAt: "2024-01-13",
-    coverLetter: "I have extensive backend development experience...",
-    resumeUrl: "#",
-  },
-];
-
-const mockPostedJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Developer",
-    company: "TechCorp Inc.",
-    applicationsCount: 15,
-    status: "active",
-    postedAt: "2024-01-10",
-  },
-  {
-    id: 2,
-    title: "Product Designer",
-    company: "Design Studio",
-    applicationsCount: 8,
-    status: "active",
-    postedAt: "2024-01-12",
-  },
-  {
-    id: 3,
-    title: "Backend Engineer",
-    company: "StartupXYZ",
-    applicationsCount: 12,
-    status: "paused",
-    postedAt: "2024-01-08",
-  },
-];
+import { ApplicationSchema, JobSchema } from "@repo/types/types";
+import { useAppContext } from "@/lib/context/AppContext";
+import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
+import { toast } from "sonner";
 
 const AdminPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [applications, setApplications] = useState<ApplicationSchema[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<
+    ApplicationSchema[]
+  >([]);
+  const [jobs, setJobs] = useState<JobSchema[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<JobSchema[]>([]);
+  const { token } = useAppContext();
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -105,15 +45,69 @@ const AdminPage = () => {
     }
   };
 
-  const filteredApplications = mockApplications.filter(
-    (app) =>
-      app.applicantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/applications/user`, {
+          headers: {
+            Authorization: `${localStorage.getItem("token")}`,
+          },
+        });
 
-  const filteredJobs = mockPostedJobs.filter((job) =>
-    job.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+        if (res.status === 200) {
+          setApplications(res.data);
+          setFilteredApplications(res.data);
+        }
+      } catch (error) {
+        console.error("Error fetching applications:", error);
+        toast.error("Failed to fetch applications");
+      }
+    };
+
+    if (token) {
+      fetchApplications();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const filteredApplications = applications.filter((app) =>
+      app.jobPosting?.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    setFilteredApplications(filteredApplications);
+  }, [searchTerm, applications]);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/jobs/user`, {
+          headers: {
+            Authorization: `${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (res.status === 200) {
+          setJobs(res.data);
+          setFilteredJobs(res.data);
+        }
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+        toast.error("Failed to fetch jobs");
+      }
+    };
+
+    if (token) {
+      fetchJobs();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const filteredJobs = jobs.filter((job) =>
+      job.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    setFilteredJobs(filteredJobs);
+  }, [searchTerm, jobs]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -127,48 +121,6 @@ const AdminPage = () => {
             <p className="text-xl text-gray-300">
               Manage your job postings and applications
             </p>
-          </div>
-
-          {/* Stats Overview */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">
-                  Total Applications
-                </CardTitle>
-                <FileText className="h-4 w-4 text-blue-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">35</div>
-                <p className="text-xs text-gray-400">+20% from last month</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">
-                  Active Jobs
-                </CardTitle>
-                <Briefcase className="h-4 w-4 text-green-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">12</div>
-                <p className="text-xs text-gray-400">+2 new this week</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">
-                  Total Applicants
-                </CardTitle>
-                <Users className="h-4 w-4 text-purple-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">248</div>
-                <p className="text-xs text-gray-400">+15% from last month</p>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Search */}
@@ -191,7 +143,7 @@ const AdminPage = () => {
                 value="applications"
                 className="data-[state=active]:bg-gray-700 text-white"
               >
-                Applications
+                My Applications
               </TabsTrigger>
               <TabsTrigger
                 value="jobs"
@@ -211,10 +163,11 @@ const AdminPage = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-lg text-white">
-                          {application.applicantName}
+                          {application.user?.name || "Anonymous Applicant"}
                         </CardTitle>
                         <CardDescription className="text-gray-300">
-                          Applied for: {application.jobTitle}
+                          Applied for:{" "}
+                          {application.jobPosting?.title || "Unknown Job"}
                         </CardDescription>
                       </div>
                       <Badge
@@ -228,11 +181,13 @@ const AdminPage = () => {
                     <div className="space-y-3">
                       <div className="text-sm text-gray-300">
                         <span className="font-medium">Email:</span>{" "}
-                        {application.applicantEmail}
+                        {application.user?.email || "N/A"}
                       </div>
                       <div className="text-sm text-gray-300">
                         <span className="font-medium">Applied:</span>{" "}
-                        {application.appliedAt}
+                        {new Date(
+                          application.createdAt!
+                        ).toLocaleDateString() || "N/A"}
                       </div>
                       <div className="text-sm text-gray-300">
                         <span className="font-medium">Cover Letter:</span>
@@ -241,14 +196,16 @@ const AdminPage = () => {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          className="border border-gray-600 text-white hover:bg-black/80 hover:border-gray-500 transition-all duration-200"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Resume
-                        </Button>
-                        <Link href={`/application/${application.id}`}>
+                        <Link href={application.resume || "#"}>
+                          <Button
+                            size="sm"
+                            className="border border-gray-600 text-white hover:bg-black/80 hover:border-gray-500 transition-all duration-200"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Resume
+                          </Button>
+                        </Link>
+                        <Link href={`/application/applied/${application.id}`}>
                           <Button
                             size="sm"
                             className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 transform hover:scale-105"
@@ -290,11 +247,11 @@ const AdminPage = () => {
                     <div className="space-y-3">
                       <div className="text-sm text-gray-300">
                         <span className="font-medium">Applications:</span>{" "}
-                        {job.applicationsCount}
+                        {job.applications?.length || 0}
                       </div>
                       <div className="text-sm text-gray-300">
                         <span className="font-medium">Posted:</span>{" "}
-                        {job.postedAt}
+                        {new Date(job.createdAt!).toLocaleDateString() || "N/A"}
                       </div>
                       <div className="flex gap-2 flex-wrap">
                         <Link href={`/job-applications/${job.id}`}>
@@ -303,17 +260,19 @@ const AdminPage = () => {
                             className="bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200 transform hover:scale-105"
                           >
                             <List className="h-4 w-4 mr-2" />
-                            View Applications ({job.applicationsCount})
+                            View Applications ({job.applications?.length || 0})
                           </Button>
                         </Link>
-                        <Button
-                          size="sm"
-                          className="border-gray-600 text-white hover:bg-gray-700 hover:border-gray-500 transition-all duration-200"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Job
-                        </Button>
-                        <Button
+                        <Link href={`/jobs/${job.id}`}>
+                          <Button
+                            size="sm"
+                            className="border-gray-600 text-white hover:bg-gray-700 hover:border-gray-500 transition-all duration-200"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Job
+                          </Button>
+                        </Link>
+                        {/* <Button
                           size="sm"
                           className="border-gray-600 text-white hover:bg-gray-700 hover:border-gray-500 transition-all duration-200"
                         >
@@ -326,7 +285,7 @@ const AdminPage = () => {
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   </CardContent>

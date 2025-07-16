@@ -27,17 +27,20 @@ model User {
 }
 
 model JobPosting {
-  id          String      @id @default(uuid())
-  title       String
-  description String
-  company     String
-  location    String
-  type        JobType     @default(REMOTE)
-  category    JobCategory @default(FULL_TIME)
-  status      JobStatus   @default(OPEN)
-  salary      String?
-  postedBy    User        @relation(fields: [postedById], references: [id])
-  postedById  String
+  id               String      @id @default(uuid())
+  title            String
+  description      String
+  company          String
+  location         String
+  type             JobType     @default(REMOTE)
+  category         JobCategory @default(FULL_TIME)
+  status           JobStatus   @default(OPEN)
+  salary           String?
+  requirements     String?
+  responsibilities String?
+  skills           String?
+  postedBy         User        @relation(fields: [postedById], references: [id])
+  postedById       String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

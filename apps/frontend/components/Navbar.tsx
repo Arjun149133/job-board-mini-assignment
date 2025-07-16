@@ -1,8 +1,9 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Briefcase, User, Plus } from "lucide-react";
+import { useAppContext } from "@/lib/context/AppContext";
+import { Briefcase, User, UserIcon, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const Navbar = () => {
@@ -10,6 +11,8 @@ const Navbar = () => {
   const [isActive, setIsActive] = useState<
     "jobs" | "create-job" | "admin" | "landing"
   >("landing");
+  const { token, setToken } = useAppContext();
+  const router = useRouter();
 
   useEffect(() => {
     if (path.startsWith("/jobs")) {
@@ -42,46 +45,68 @@ const Navbar = () => {
           >
             Jobs
           </Link>
-          <Link
-            href="/create-job"
-            className={`text-sm font-medium transition-colors ${
-              isActive === "create-job"
-                ? "text-blue-400"
-                : "text-gray-300 hover:text-white"
-            }`}
-          >
-            Post Job
-          </Link>
-          <Link
-            href="/admin"
-            className={`text-sm font-medium transition-colors ${
-              isActive === "admin"
-                ? "text-blue-400"
-                : "text-gray-300 hover:text-white"
-            }`}
-          >
-            Admin
-          </Link>
+          {token && (
+            <Link
+              href="/create-job"
+              className={`text-sm font-medium transition-colors ${
+                isActive === "create-job"
+                  ? "text-blue-400"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Post Job
+            </Link>
+          )}
+          {token && (
+            <Link
+              href="/admin"
+              className={`text-sm font-medium transition-colors ${
+                isActive === "admin"
+                  ? "text-blue-400"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Admin
+            </Link>
+          )}
         </div>
 
-        <div className="flex items-center space-x-3">
-          <Link href="/login">
-            <Button
-              size={"sm"}
-              className="border-white/50 text-white hover:bg-gray-800 border"
-            >
-              <User className="h-4 w-4 mr-2" />
-              Login
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button
-              size={"sm"}
-              className="bg-blue-600 text-sm hover:bg-blue-700"
-            >
-              Sign Up
-            </Button>
-          </Link>
+        <div>
+          {!token ? (
+            <div className="flex items-center space-x-3">
+              <Link href="/login">
+                <Button
+                  size={"sm"}
+                  className="border-white/50 text-white hover:bg-gray-800 border"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              </Link>
+              <Link href="/signup">
+                <Button
+                  size={"sm"}
+                  className="bg-blue-600 text-sm hover:bg-blue-700"
+                >
+                  Sign Up
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className=" flex items-center space-x-4">
+              <Link href={"/admin"}>
+                <UserIcon className=" w-5 h-5 cursor-pointer text-white" />
+              </Link>
+              <LogOut
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  setToken(null);
+                  router.push("/login");
+                }}
+                className=" w-5 h-5 cursor-pointer text-white"
+              />
+            </div>
+          )}
         </div>
       </div>
     </nav>

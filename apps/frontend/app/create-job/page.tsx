@@ -13,17 +13,21 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import Link from "next/link";
+import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
+import { JobSchema } from "@repo/types/types";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const CreateJobPage = () => {
-  // const { toast } = useToast();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     title: "",
     company: "",
     location: "",
-    type: "",
+    type: "REMOTE",
+    category: "FULL_TIME",
     salary: "",
     description: "",
     requirements: "",
@@ -33,55 +37,61 @@ const CreateJobPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
+    const parsedData = JobSchema.safeParse(formData);
+
+    let errors;
+    if (!parsedData.success) {
+      errors = JSON.parse(parsedData.error.message);
+    }
+
+    if (!errors) {
+      setErrors({});
+      return true;
+    }
+
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = "Job title is required";
-    }
-
-    if (!formData.company.trim()) {
-      newErrors.company = "Company name is required";
-    }
-
-    if (!formData.location.trim()) {
-      newErrors.location = "Location is required";
-    }
-
-    if (!formData.type) {
-      newErrors.type = "Job type is required";
-    }
-
-    if (!formData.salary.trim()) {
-      newErrors.salary = "Salary range is required";
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = "Job description is required";
-    }
+    errors.forEach((error: { path: string[]; message: string }) => {
+      const field = error.path[0];
+      newErrors[field] = error.message;
+    });
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return false;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (validateForm()) {
-      // toast({
-      //   title: "Job Posted Successfully!",
-      //   description: "Your job posting has been created and is now live.",
-      // });
-      // Reset form
-      setFormData({
-        title: "",
-        company: "",
-        location: "",
-        type: "",
-        salary: "",
-        description: "",
-        requirements: "",
-        responsibilities: "",
-        skills: "",
-      });
+      try {
+        const res = await axios.post(`${API_BASE_URL}/jobs`, formData, {
+          headers: {
+            Authorization: `${localStorage.getItem("token")}`,
+          },
+        });
+
+        console.log(res.data);
+        if (res.status === 201) {
+          toast.success("Job posted successfully!");
+          router.push("/jobs");
+        }
+        setFormData({
+          title: "",
+          company: "",
+          location: "",
+          type: "",
+          salary: "",
+          description: "",
+          requirements: "",
+          category: "",
+          responsibilities: "",
+          skills: "",
+        });
+      } catch (error) {
+        console.error("Error posting job:", error);
+        toast.error("Failed to post job. Please try again.");
+      }
     }
   };
 
@@ -169,6 +179,7 @@ const CreateJobPage = () => {
                       Job Type
                     </Label>
                     <Select
+                      defaultValue="REMOTE"
                       value={formData.type}
                       onValueChange={(value) =>
                         setFormData({ ...formData, type: value })
@@ -178,14 +189,40 @@ const CreateJobPage = () => {
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-700 border-gray-600">
-                        <SelectItem value="full-time">Full-time</SelectItem>
-                        <SelectItem value="part-time">Part-time</SelectItem>
-                        <SelectItem value="contract">Contract</SelectItem>
-                        <SelectItem value="internship">Internship</SelectItem>
+                        <SelectItem value="REMOTE">Remote</SelectItem>
+                        <SelectItem value="ONSITE">Onsite</SelectItem>
+                        <SelectItem value="HYBRID">Hybrid</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.type && (
                       <p className="text-red-400 text-sm">{errors.type}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="type" className="text-white">
+                      Job Category
+                    </Label>
+                    <Select
+                      defaultValue="FULL_TIME"
+                      value={formData.category}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, category: value })
+                      }
+                    >
+                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-gray-600">
+                        <SelectItem value="FULL_TIME">Full_Time</SelectItem>
+                        <SelectItem value="PART_TIME">Part_Time</SelectItem>
+                        <SelectItem value="FREELANCE">FreeLance</SelectItem>
+                        <SelectItem value="INTERNSHIP">Internship</SelectItem>
+                        <SelectItem value="TEMPORARY">Temporary</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.type && (
+                      <p className="text-red-400 text-sm">{errors.category}</p>
                     )}
                   </div>
 

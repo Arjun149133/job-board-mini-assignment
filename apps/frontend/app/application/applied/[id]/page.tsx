@@ -1,13 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
@@ -65,10 +59,6 @@ const ApplicationDetails = () => {
       default:
         return "bg-gray-600 hover:bg-gray-700";
     }
-  };
-
-  const handleStatusChange = (newStatus: string) => {
-    // setApplication({ ...application, status: newStatus });
   };
 
   if (!application) {
@@ -179,51 +169,6 @@ const ApplicationDetails = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Actions */}
-              <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 transform hover:scale-105">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Resume
-                  </Button>
-                  <Button className="w-full border-gray-600 text-white hover:bg-gray-700 hover:border-gray-500 transition-all duration-200">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Resume
-                  </Button>
-                  <Button className="w-full border-gray-600 text-white hover:bg-gray-700 hover:border-gray-500 transition-all duration-200">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Contact Applicant
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Status Management */}
-              <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Update Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {["pending", "reviewed", "approved", "rejected"].map(
-                    (status) => (
-                      <Button
-                        key={status}
-                        onClick={() => handleStatusChange(status)}
-                        className={`w-full transition-all duration-200 transform hover:scale-105 ${
-                          application.status === status
-                            ? `${getStatusColor(status)} text-white`
-                            : "border-gray-600 text-white hover:bg-gray-700 hover:border-gray-500"
-                        }`}
-                      >
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </Button>
-                    )
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Timeline */}
               <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
                 <CardHeader>

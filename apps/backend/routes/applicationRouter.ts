@@ -53,6 +53,28 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 })
 
+// get all the applications applied by the given userId
+router.get("/user", authMiddleware, async (req, res) => {
+    try {
+        const applications = await prisma.jobApplication.findMany({
+            where: {
+                userId: req.userId!,
+            },
+            include: {
+                user: true,
+                jobPosting: true,
+            }
+        });
+
+        res.status(200).json(applications);
+    } catch (error) {
+        res.status(500).json({
+            error: "Internal server error",
+        });
+        return;
+    }
+})
+
 // create a new application for a job
 router.post("/", authMiddleware, async (req, res) => {
     const jobApplication = req.body;

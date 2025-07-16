@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,48 +28,54 @@ import {
   Upload,
   ArrowLeft,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/config";
+import axios, { AxiosError } from "axios";
+import { JobSchema } from "@repo/types/types";
+import jwt from "jsonwebtoken";
+import { useAppContext } from "@/lib/context/AppContext";
 // import { useToast } from "@/hooks/use-toast";
-
-// Mock job data (in a real app, this would come from an API)
-const mockJob = {
-  id: 1,
-  title: "Senior Frontend Developer",
-  company: "TechCorp Inc.",
-  location: "San Francisco, CA",
-  type: "Full-time",
-  salary: "$120,000 - $150,000",
-  description:
-    "We're looking for a Senior Frontend Developer to join our growing team and help build the next generation of web applications. You'll work with cutting-edge technologies and collaborate with a talented team of engineers, designers, and product managers.",
-  requirements: [
-    "5+ years of experience with React and modern JavaScript",
-    "Strong knowledge of TypeScript and modern build tools",
-    "Experience with responsive design and CSS frameworks",
-    "Familiarity with testing frameworks (Jest, React Testing Library)",
-    "Strong problem-solving skills and attention to detail",
-  ],
-  responsibilities: [
-    "Develop and maintain high-quality React applications",
-    "Collaborate with design and backend teams",
-    "Write clean, maintainable, and well-tested code",
-    "Participate in code reviews and technical discussions",
-    "Mentor junior developers and contribute to team growth",
-  ],
-  postedAt: "2 days ago",
-  skills: ["React", "TypeScript", "Tailwind CSS", "Jest", "Git"],
-};
 
 const JobDetails = () => {
   const { id } = useParams();
-  //   const { toast } = useToast();
   const [applicationData, setApplicationData] = useState({
     coverLetter: "",
-    resumeFile: null as File | null,
+    resumeFile: "",
   });
+  const [job, setJob] = useState<JobSchema>();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [jobNotFound, setJobNotFound] = useState(false);
+  const { userId, token } = useAppContext();
+
+  useEffect(() => {
+    const fetchJobDetails = async () => {
+      try {
+        const response = await axios(`${API_BASE_URL}/jobs/${id}`, {
+          headers: {
+            Authorization: `${localStorage.getItem("token")}`,
+          },
+        });
+        if (response.status === 200) {
+          setJob(response.data);
+        } else {
+          console.error("Failed to fetch job details");
+        }
+      } catch (error) {
+        console.error("Error fetching job details:", error);
+        if (error instanceof AxiosError && error.response?.data.error) {
+          console.log("Job not found");
+          setJobNotFound(true);
+        }
+      }
+    };
+
+    if (id) {
+      fetchJobDetails();
+    } else {
+      console.error("Job ID is not provided");
+    }
+  }, [id, jobNotFound]);
 
   const validateApplication = () => {
     const newErrors: Record<string, string> = {};
@@ -86,31 +92,62 @@ const JobDetails = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.type === "application/pdf" || file.type.includes("document")) {
-        setApplicationData({ ...applicationData, resumeFile: file });
-        setErrors({ ...errors, resume: "" });
-      } else {
-        setErrors({
-          ...errors,
-          resume: "Please upload a PDF or Word document",
-        });
+  const handleSubmitApplication = async () => {
+    if (validateApplication()) {
+      try {
+        const res = await axios.post(
+          `${API_BASE_URL}/applications`,
+          {
+            jobPostingId: job?.id,
+            coverLetter: applicationData.coverLetter,
+            resume: applicationData.resumeFile,
+          },
+          {
+            headers: {
+              Authorization: `${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        console.log("Application submitted successfully:", res.data);
+        if (res.status === 201) {
+          setApplicationData({ coverLetter: "", resumeFile: "" });
+          setErrors({});
+        }
+      } catch (error) {
+        console.error("Error submitting application:", error);
+        if (error instanceof AxiosError && error.response?.data.error) {
+          setErrors({ resume: error.response.data.error });
+        } else {
+          setErrors({ resume: "Failed to submit application" });
+        }
       }
     }
   };
 
-  const handleSubmitApplication = () => {
-    if (validateApplication()) {
-      //   toast({
-      //     title: "Application Submitted!",
-      //     description:
-      //       "Your application has been sent successfully. We'll be in touch soon!",
-      //   });
-      setApplicationData({ coverLetter: "", resumeFile: null });
-    }
-  };
+  if (!job && !jobNotFound) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <p className="text-white">Loading job details...</p>
+      </div>
+    );
+  }
+
+  if (jobNotFound) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <p className="text-red-500">Job not found</p>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <p className="text-red-500">Job not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -131,40 +168,40 @@ const JobDetails = () => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <CardTitle className="text-3xl text-white mb-2">
-                    {mockJob.title}
+                    {job.title}
                   </CardTitle>
                   <CardDescription className="flex items-center text-gray-300 mb-2 text-lg">
                     <Building className="h-5 w-5 mr-2" />
-                    {mockJob.company}
+                    {job.company}
                   </CardDescription>
                 </div>
                 <Badge
                   variant="secondary"
                   className="bg-green-600 text-white text-sm px-3 py-1"
                 >
-                  {mockJob.type}
+                  {job.type}
                 </Badge>
               </div>
 
               <div className="flex flex-wrap items-center gap-6 text-gray-300">
                 <div className="flex items-center">
                   <MapPin className="h-5 w-5 mr-2" />
-                  {mockJob.location}
+                  {job.location}
                 </div>
                 <div className="flex items-center">
                   <DollarSign className="h-5 w-5 mr-2" />
-                  {mockJob.salary}
+                  {job.salary}
                 </div>
                 <div className="flex items-center">
                   <Clock className="h-5 w-5 mr-2" />
-                  {mockJob.postedAt}
+                  {new Date(job.createdAt!).toLocaleDateString()}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex justify-between items-center">
                 <div className="flex flex-wrap gap-2">
-                  {mockJob.skills.map((skill, index) => (
+                  {job.skills?.split(",").map((skill, index) => (
                     <Badge
                       key={index}
                       variant="outline"
@@ -177,13 +214,17 @@ const JobDetails = () => {
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                    <Button
+                      disabled={userId === job.postedById}
+                      size="lg"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
                       Apply Now
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>Apply for {mockJob.title}</DialogTitle>
+                      <DialogTitle>Apply for {job.title}</DialogTitle>
                       <DialogDescription className="text-gray-400">
                         Submit your application with a cover letter and resume.
                       </DialogDescription>
@@ -212,22 +253,22 @@ const JobDetails = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="resume">Resume</Label>
+                        <Label htmlFor="resume">Resume (Drive Link)</Label>
                         <div className="flex items-center space-x-2">
                           <Input
                             id="resume"
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={handleFileChange}
-                            className="bg-gray-700 border-gray-600 text-white file:bg-gray-600 file:text-white file:border-0"
+                            type="text"
+                            placeholder="Enter your resume link"
+                            value={applicationData.resumeFile}
+                            onChange={(e) =>
+                              setApplicationData({
+                                ...applicationData,
+                                resumeFile: e.target.value,
+                              })
+                            }
+                            className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 flex-1"
                           />
-                          <Upload className="h-5 w-5 text-gray-400" />
                         </div>
-                        {applicationData.resumeFile && (
-                          <p className="text-green-400 text-sm">
-                            ✓ {applicationData.resumeFile.name}
-                          </p>
-                        )}
                         {errors.resume && (
                           <p className="text-red-400 text-sm">
                             {errors.resume}
@@ -236,10 +277,13 @@ const JobDetails = () => {
                       </div>
 
                       <Button
+                        disabled={!token}
                         onClick={handleSubmitApplication}
                         className="w-full bg-blue-600 hover:bg-blue-700"
                       >
-                        Submit Application
+                        {!token
+                          ? "Please login to apply"
+                          : "Submit Application"}
                       </Button>
                     </div>
                   </DialogContent>
@@ -257,7 +301,7 @@ const JobDetails = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-300 leading-relaxed">
-                    {mockJob.description}
+                    {job.description}
                   </p>
                 </CardContent>
               </Card>
@@ -270,15 +314,17 @@ const JobDetails = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {mockJob.responsibilities.map((responsibility, index) => (
-                      <li
-                        key={index}
-                        className="text-gray-300 flex items-start"
-                      >
-                        <span className="text-blue-400 mr-2">•</span>
-                        {responsibility}
-                      </li>
-                    ))}
+                    {job.responsibilities
+                      ?.split(/\r?\n/)
+                      .map((responsibility, index) => (
+                        <li
+                          key={index}
+                          className="text-gray-300 flex items-start"
+                        >
+                          <span className="text-blue-400 mr-2">•</span>
+                          {responsibility}
+                        </li>
+                      ))}
                   </ul>
                 </CardContent>
               </Card>
@@ -289,15 +335,17 @@ const JobDetails = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {mockJob.requirements.map((requirement, index) => (
-                      <li
-                        key={index}
-                        className="text-gray-300 flex items-start"
-                      >
-                        <span className="text-blue-400 mr-2">•</span>
-                        {requirement}
-                      </li>
-                    ))}
+                    {job.requirements
+                      ?.split(/\r?\n/)
+                      .map((requirement, index) => (
+                        <li
+                          key={index}
+                          className="text-gray-300 flex items-start"
+                        >
+                          <span className="text-blue-400 mr-2">•</span>
+                          {requirement}
+                        </li>
+                      ))}
                   </ul>
                 </CardContent>
               </Card>
@@ -307,7 +355,7 @@ const JobDetails = () => {
               <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
                 <CardHeader>
                   <CardTitle className="text-white">
-                    About {mockJob.company}
+                    About {job.company}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

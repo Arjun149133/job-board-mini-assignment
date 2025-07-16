@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Eye, EyeOff, Briefcase } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
+import { toast } from "sonner";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +24,6 @@ const Signup = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  // const { toast } = useToast();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -46,14 +48,27 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // toast({
-      //   title: "Account Created",
-      //   description: "Welcome to JobBoard! Please log in to continue.",
-      // });
-      // Handle signup logic here
+      try {
+        const res = await axios.post(`${API_BASE_URL}/auth/signup`, {
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (res.status === 201) {
+          toast.success("Account created successfully! Please log in.");
+        }
+
+        setFormData({ email: "", password: "", confirmPassword: "" });
+        setErrors({});
+      } catch (error) {
+        console.log("Signup error:", error);
+        toast.error(
+          "Failed to create account. Please try again. check the logs."
+        );
+      }
     }
   };
 

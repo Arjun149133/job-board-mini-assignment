@@ -12,6 +12,12 @@ import {
 } from "@/components/ui/card";
 import { Eye, EyeOff, Briefcase } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
+import { useRouter } from "next/navigation";
+import { useAppContext } from "@/lib/context/AppContext";
+import jwt from "jsonwebtoken";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +26,9 @@ const Login = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { setToken, setUserId } = useAppContext();
+  const router = useRouter();
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -37,14 +46,30 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // toast({
-      //   title: "Login Successful",
-      //   description: "Welcome back to JobBoard!",
-      // });
-      // Handle login logic here
+      try {
+        const res = await axios.post(`${API_BASE_URL}/auth/login`, {
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (res.status === 200) {
+          localStorage.setItem("token", res.data.token);
+          setToken(res.data.token);
+          const decoded: any = jwt.decode(res.data.token);
+          setUserId(decoded?.userId || null);
+
+          toast.success("Login successful!");
+          router.push("/jobs");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        toast.error(
+          "Failed to log in. Please check your credentials and try again."
+        );
+      }
     }
   };
 

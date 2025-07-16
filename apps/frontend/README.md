@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+export const jobSeedData = [
+{
+title: "Frontend Developer",
+description: "Join our dynamic team to build modern web applications using React.",
+company: "TechNova",
+location: "San Francisco, CA",
+category: "FULL_TIME",
+type: "ONSITE",
+status: "OPEN",
+requirements: "3+ years of experience in frontend development, proficiency in JavaScript, React, HTML, and CSS.",
+responsibilities: "Develop responsive user interfaces, collaborate with design and backend teams.",
+skills: "React, JavaScript, CSS, Git",
+salary: "$90,000 - $110,000/year",
+},
+{
+title: "Data Analyst Intern",
+description: "Assist the analytics team in gathering and interpreting data for business insights.",
+company: "InsightLoop",
+location: "Remote",
+category: "INTERNSHIP",
+type: "REMOTE",
+status: "OPEN",
+requirements: "Current enrollment in a Bachelor's program in Statistics, Mathematics, or related field.",
+responsibilities: "Clean and process datasets, create basic reports and dashboards.",
+skills: "Excel, SQL, Python (Pandas), Data Visualization",
+salary: "$18/hour",
+},
+{
+title: "Marketing Consultant",
+description: "Work with clients to improve their digital marketing strategy and performance.",
+company: "BrandWise",
+location: "New York, NY",
+category: "FREELANCE",
+type: "HYBRID",
+status: "PENDING",
+requirements: "Experience in SEO, PPC, and social media campaigns.",
+responsibilities: "Create marketing strategies, track performance, and report insights to clients.",
+skills: "SEO, Google Ads, Facebook Ads, Google Analytics",
+salary: "$40/hour",
+},
+{
+title: "IT Support Specialist",
+description: "Provide technical support for internal systems and end users.",
+company: "CloudCore Solutions",
+location: "Austin, TX",
+category: "CONTRACT",
+type: "ONSITE",
+status: "FILLED",
+requirements: "Strong knowledge of Windows, networking, and troubleshooting hardware/software issues.",
+responsibilities: "Handle support tickets, perform routine system maintenance, and assist in tech onboarding.",
+skills: "Windows OS, Networking, Help Desk, Troubleshooting",
+salary: "$28/hour",
+},
+{
+title: "Volunteer Web Designer",
+description: "Design a clean and user-friendly website for a non-profit organization.",
+company: "GreenWorld Initiative",
+location: "Portland, OR",
+category: "VOLUNTEER",
+type: "REMOTE",
+status: "OPEN",
+requirements: "Familiarity with web design principles and tools like Figma or Adobe XD.",
+responsibilities: "Design wireframes and mockups, ensure accessibility and responsiveness.",
+skills: "HTML, CSS, UX/UI Design, Figma",
+salary: "",
+},
+];

@@ -2,10 +2,12 @@ import express from 'express';
 import userRouter from './routes/userRouter';
 import jobRouter from './routes/jobRouter';
 import applicationRouter from './routes/applicationRouter';
+import cors from 'cors';
 
 const app = express();
 
 app.use(express.json());
+app.use(cors())
 
 app.use("/api/auth", userRouter)
 app.use("/api/jobs", jobRouter);
