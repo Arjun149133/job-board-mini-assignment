@@ -54,6 +54,7 @@ const Signup = () => {
     if (validateForm()) {
       try {
         const res = await axios.post(`${API_BASE_URL}/auth/signup`, {
+          name: formData.name,
           email: formData.email,
           password: formData.password,
         });
