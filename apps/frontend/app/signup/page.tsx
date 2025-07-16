@@ -16,6 +16,7 @@ import axios from "axios";
 import { API_BASE_URL } from "@/lib/config";
 import { toast } from "sonner";
 import Loader from "@/components/Loader";
+import { useRouter } from "next/navigation";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +26,7 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
   });
+  const router = useRouter();
   const [loader, setLoader] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -63,6 +65,7 @@ const Signup = () => {
         });
 
         if (res.status === 201) {
+          router.push("/login");
           toast.success("Account created successfully! Please log in.");
         }
 
