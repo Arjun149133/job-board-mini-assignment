@@ -22,56 +22,7 @@ import Link from "next/link";
 import axios from "axios";
 import { API_BASE_URL } from "@/lib/config";
 import { JobSchema } from "@repo/types/types";
-
-// Mock job data
-const mockJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Developer",
-    company: "TechCorp Inc.",
-    location: "San Francisco, CA",
-    type: "Full-time",
-    salary: "$120,000 - $150,000",
-    description:
-      "We're looking for a Senior Frontend Developer to join our growing team...",
-    postedAt: "2 days ago",
-    skills: ["React", "TypeScript", "Tailwind CSS"],
-  },
-  {
-    id: 2,
-    title: "Product Designer",
-    company: "Design Studio",
-    location: "Remote",
-    type: "Full-time",
-    salary: "$90,000 - $120,000",
-    description:
-      "Join our design team and help create beautiful user experiences...",
-    postedAt: "1 day ago",
-    skills: ["Figma", "UI/UX", "Prototyping"],
-  },
-  {
-    id: 3,
-    title: "Backend Engineer",
-    company: "StartupXYZ",
-    location: "New York, NY",
-    type: "Part-time",
-    salary: "$80,000 - $100,000",
-    description: "Looking for a backend engineer to help scale our platform...",
-    postedAt: "3 days ago",
-    skills: ["Node.js", "Python", "PostgreSQL"],
-  },
-  {
-    id: 4,
-    title: "DevOps Engineer",
-    company: "CloudTech",
-    location: "Austin, TX",
-    type: "Contract",
-    salary: "$110,000 - $140,000",
-    description: "Help us build and maintain our cloud infrastructure...",
-    postedAt: "1 week ago",
-    skills: ["AWS", "Docker", "Kubernetes"],
-  },
-];
+import Loader from "@/components/Loader";
 
 const JobsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,8 +30,10 @@ const JobsPage = () => {
   const [jobCategory, setJobCategory] = useState("all");
   const [jobs, setJobs] = useState<JobSchema[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<JobSchema[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchJobs = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/jobs`, {
         headers: {
@@ -97,6 +50,7 @@ const JobsPage = () => {
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -119,6 +73,24 @@ const JobsPage = () => {
 
     setFilteredJobs(filtered);
   }, [searchTerm, jobType]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (!jobs || jobs.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <p className="text-gray-400 text-lg">
+          No jobs available at the moment.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
