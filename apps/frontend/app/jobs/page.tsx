@@ -72,7 +72,7 @@ const JobsPage = () => {
     });
 
     setFilteredJobs(filtered);
-  }, [searchTerm, jobType]);
+  }, [searchTerm, jobType, jobCategory]);
 
   if (loading) {
     return (
